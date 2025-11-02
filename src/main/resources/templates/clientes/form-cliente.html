@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:text="${cliente.id == null ? 'Novo Cliente' : 'Editar Cliente'}"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+</head>
+<body>
+<div class="container mt-4">
+    <h2 th:text="${cliente.id == null ? '➕ Novo Cliente' : '✏️ Editar Cliente'}" class="mb-4"></h2>
+
+    <form th:action="${cliente.id == null ? '/clientes/salvar' : '/clientes/atualizar/' + cliente.id}"
+          th:object="${cliente}"
+          method="post"
+          class="row g-3">
+
+        <input type="hidden" th:field="*{id}" th:if="${cliente.id != null}" />
+
+        <h4 class="mt-4">Dados Pessoais</h4>
+        <hr>
+
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome:</label>
+            <input type="text" th:field="*{nome}" id="nome" class="form-control"
+                   th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid' : ''">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email:</label>
+            <input type="text" th:field="*{email}" id="email" class="form-control"
+                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+        </div>
+
+        <div class="col-md-4">
+            <label for="telefone" class="form-label">Telefone:</label>
+            <input type="text" th:field="*{telefone}" id="telefone" class="form-control"
+                   th:classappend="${#fields.hasErrors('telefone')} ? 'is-invalid' : ''">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}"></div>
+        </div>
+
+        <h4 class="mt-4">Endereço (Busca por CEP)</h4>
+        <hr>
+
+        <div class="col-md-4">
+            <label for="cep" class="form-label">CEP:</label>
+            <input type="text" th:field="*{endereco.cep}" id="cep" class="form-control"
+                   th:classappend="${#fields.hasErrors('endereco.cep')} ? 'is-invalid' : ''">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('endereco.cep')}" th:errors="*{endereco.cep}"></div>
+        </div>
+
+        <div class="col-md-8">
+            <label for="logradouro" class="form-label">Logradouro:</label>
+            <input type="text" th:field="*{endereco.logradouro}" id="logradouro" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-4">
+            <label for="bairro" class="form-label">Bairro:</label>
+            <input type="text" th:field="*{endereco.bairro}" id="bairro" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-4">
+            <label for="localidade" class="form-label">Cidade:</label>
+            <input type="text" th:field="*{endereco.localidade}" id="localidade" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-4">
+            <label for="uf" class="form-label">UF:</label>
+            <input type="text" th:field="*{endereco.uf}" id="uf" class="form-control" readonly>
+        </div>
+
+        <div class="col-12">
+            <label for="complemento" class="form-label">Complemento:</label>
+            <input type="text" th:field="*{endereco.complemento}" id="complemento" class="form-control">
+        </div>
+
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-success me-2">Salvar</button>
+            <a th:href="@{/clientes}" class="btn btn-secondary">Cancelar</a>
+        </div>
+
+        <input type="hidden" th:field="*{endereco.ibge}" id="ibge">
+        <input type="hidden" th:field="*{endereco.gia}" id="gia">
+        <input type="hidden" th:field="*{endereco.ddd}" id="ddd">
+        <input type="hidden" th:field="*{endereco.siafi}" id="siafi">
+
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        // Função para limpar os campos de endereço
+        function limpa_formulário_cep() {
+            $("#logradouro").val("");
+            $("#bairro").val("");
+            $("#localidade").val("");
+            $("#uf").val("");
+            $("#ibge").val("");
+            $("#gia").val("");
+            $("#ddd").val("");
+            $("#siafi").val("");
+        }
+
+
+        $("#cep").blur(function() {
+
+            var cep = $(this).val().replace(/\D/g, '');
+
+            if (cep != "") {
+                var validacep = /^[0-9]{8}$/;
+
+                if(validacep.test(cep)) {
+
+                    $("#logradouro").val("...");
+                    $("#bairro").val("...");
+                    $("#localidade").val("...");
+                    $("#uf").val("...");
+
+
+                    $.getJSON("https://viacep.com.br/ws/" + cep + "/json/?callback=?", function(dados) {
+
+                        if (!("erro" in dados)) {
+
+                            $("#logradouro").val(dados.logradouro);
+                            $("#bairro").val(dados.bairro);
+                            $("#localidade").val(dados.localidade);
+                            $("#uf").val(dados.uf);
+
+
+                            $("#ibge").val(dados.ibge);
+                            $("#gia").val(dados.gia);
+                            $("#ddd").val(dados.ddd);
+                            $("#siafi").val(dados.siafi);
+                        } else {
+
+                            limpa_formulário_cep();
+                            alert("CEP não encontrado.");
+                        }
+                    });
+                } else {
+
+                    limpa_formulário_cep();
+                    alert("Formato de CEP inválido.");
+                }
+            } else {
+
+                limpa_formulário_cep();
+            }
+        });
+    });
+</script>
+</body>
+</html>
